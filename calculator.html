@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complex Calculator</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+
+        .calculator {
+            background-color: #333;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .display {
+            background-color: #222;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        #result {
+            color: #fff;
+            font-size: 2em;
+            text-align: right;
+            margin-bottom: 10px;
+            min-height: 1.2em;
+            overflow: auto;
+        }
+
+        #history {
+            color: #888;
+            font-size: 1em;
+            text-align: right;
+            min-height: 1em;
+            overflow: auto;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+        }
+
+        button {
+            padding: 15px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .number {
+            background-color: #444;
+            color: white;
+        }
+
+        .operator {
+            background-color: #ff9500;
+            color: white;
+        }
+
+        .function {
+            background-color: #666;
+            color: white;
+        }
+
+        .memory {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .clear {
+            background-color: #f44336;
+            color: white;
+        }
+
+        button:hover {
+            filter: brightness(110%);
+        }
+
+        .mode-switch {
+            margin-bottom: 15px;
+            text-align: right;
+        }
+
+        #modeToggle {
+            padding: 8px;
+            background-color: #666;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="mode-switch">
+            <button id="modeToggle">Switch to Scientific Mode</button>
+        </div>
+        <div class="display">
+            <div id="history"></div>
+            <div id="result">0</div>
+        </div>
+        <div class="buttons">
+            <!-- Memory Operations -->
+            <button class="memory" onclick="memoryStore()">MS</button>
+            <button class="memory" onclick="memoryRecall()">MR</button>
+            <button class="memory" onclick="memoryAdd()">M+</button>
+            <button class="memory" onclick="memoryClear()">MC</button>
+            <button class="clear" onclick="clearAll()">C</button>
+
+            <!-- Scientific Functions -->
+            <button class="function" onclick="calculate('sin')">sin</button>
+            <button class="function" onclick="calculate('cos')">cos</button>
+            <button class="function" onclick="calculate('tan')">tan</button>
+            <button class="function" onclick="calculate('sqrt')">√</button>
+            <button class="function" onclick="calculate('pow')">x²</button>
+
+            <!-- Numbers and Basic Operations -->
+            <button class="number" onclick="appendNumber(7)">7</button>
+            <button class="number" onclick="appendNumber(8)">8</button>
+            <button class="number" onclick="appendNumber(9)">9</button>
+            <button class="operator" onclick="setOperation('/')">/</button>
+            <button class="function" onclick="calculate('log')">log</button>
+
+            <button class="number" onclick="appendNumber(4)">4</button>
+            <button class="number" onclick="appendNumber(5)">5</button>
+            <button class="number" onclick="appendNumber(6)">6</button>
+            <button class="operator" onclick="setOperation('*')">×</button>
+            <button class="function" onclick="calculate('exp')">exp</button>
+
+            <button class="number" onclick="appendNumber(1)">1</button>
+            <button class="number" onclick="appendNumber(2)">2</button>
+            <button class="number" onclick="appendNumber(3)">3</button>
+            <button class="operator" onclick="setOperation('-')">-</button>
+            <button class="function" onclick="calculate('abs')">|x|</button>
+
+            <button class="number" onclick="appendNumber(0)">0</button>
+            <button class="number" onclick="appendDecimal()">.</button>
+            <button class="operator" onclick="calculate('equals')">=</button>
+            <button class="operator" onclick="setOperation('+')">+</button>
+            <button class="function" onclick="calculate('pi')">π</button>
+        </div>
+    </div>
+
+    <script>
+        let currentInput = '0';
+        let previousInput = '';
+        let operation = null;
+        let memory = 0;
+        let isScientificMode = false;
+
+        const resultDisplay = document.getElementById('result');
+        const historyDisplay = document.getElementById('history');
+        const modeToggle = document.getElementById('modeToggle');
+
+        function updateDisplay() {
+            resultDisplay.textContent = currentInput;
+            historyDisplay.textContent = previousInput;
+        }
+
+        function appendNumber(number) {
+            if (currentInput === '0' || currentInput === 'Error') {
+                currentInput = number.toString();
+            } else {
+                currentInput += number.toString();
+            }
+            updateDisplay();
+        }
+
+        function appendDecimal() {
+            if (!currentInput.includes('.')) {
+                currentInput += '.';
+                updateDisplay();
+            }
+        }
+
+        function setOperation(op) {
+            if (operation !== null) calculate('equals');
+            operation = op;
+            previousInput = currentInput + ' ' + op;
+            currentInput = '0';
+            updateDisplay();
+        }
+
+        function calculate(action) {
+            try {
+                switch (action) {
+                    case 'equals':
+                        if (operation && previousInput) {
+                            const prev = parseFloat(previousInput);
+                            const curr = parseFloat(currentInput);
+                            switch (operation) {
+                                case '+': currentInput = (prev + curr).toString(); break;
+                                case '-': currentInput = (prev - curr).toString(); break;
+                                case '*': currentInput = (prev * curr).toString(); break;
+                                case '/': currentInput = (prev / curr).toString(); break;
+                            }
+                            operation = null;
+                            previousInput = '';
+                        }
+                        break;
+                    case 'sin': currentInput = Math.sin(parseFloat(currentInput)).toString(); break;
+                    case 'cos': currentInput = Math.cos(parseFloat(currentInput)).toString(); break;
+                    case 'tan': currentInput = Math.tan(parseFloat(currentInput)).toString(); break;
+                    case 'sqrt': currentInput = Math.sqrt(parseFloat(currentInput)).toString(); break;
+                    case 'pow': currentInput = Math.pow(parseFloat(currentInput), 2).toString(); break;
+                    case 'log': currentInput = Math.log10(parseFloat(currentInput)).toString(); break;
+                    case 'exp': currentInput = Math.exp(parseFloat(currentInput)).toString(); break;
+                    case 'abs': currentInput = Math.abs(parseFloat(currentInput)).toString(); break;
+                    case 'pi': currentInput = Math.PI.toString(); break;
+                }
+                updateDisplay();
+            } catch (error) {
+                currentInput = 'Error';
+                updateDisplay();
+            }
+        }
+
+        function clearAll() {
+            currentInput = '0';
+            previousInput = '';
+            operation = null;
+            updateDisplay();
+        }
+
+        // Memory functions
+        function memoryStore() {
+            memory = parseFloat(currentInput);
+            currentInput = '0';
+            updateDisplay();
+        }
+
+        function memoryRecall() {
+            currentInput = memory.toString();
+            updateDisplay();
+        }
+
+        function memoryAdd() {
+            memory += parseFloat(currentInput);
+        }
+
+        function memoryClear() {
+            memory = 0;
+        }
+
+        // Mode toggle
+        modeToggle.addEventListener('click', () => {
+            isScientificMode = !isScientificMode;
+            modeToggle.textContent = isScientificMode ? 
+                'Switch to Basic Mode' : 'Switch to Scientific Mode';
+            document.querySelectorAll('.function').forEach(button => {
+                button.style.display = isScientificMode ? 'block' : 'none';
+            });
+        });
+
+        // Initialize
+        updateDisplay();
+        // Hide scientific functions initially
+        document.querySelectorAll('.function').forEach(button => {
+            button.style.display = 'none';
+        });
+    </script>
+</body>
+</html>
